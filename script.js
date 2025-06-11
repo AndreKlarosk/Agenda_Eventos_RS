@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const description = eventDescInput.value.trim();
         const eventId = eventIdInput.value || `${selectedDate}-${Date.now()}`;
-        const hour = document.getElementById('event-date-input').value;
+        const hour = document.getElementById('event-hour-input').value;
         
         const eventData = {
             id: eventId,
