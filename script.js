@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById('modal-title');
     const eventIdInput = document.getElementById('event-id');
     const eventTitleInput = document.getElementById('event-title-input');
+    const eventTitleInput = document.getElementById('event-time-input');
     const eventDescInput = document.getElementById('event-desc-input');
     const saveEventBtn = document.getElementById('save-event-btn');
     const deleteEventBtn = document.getElementById('delete-event-btn');
@@ -97,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = 'Editar Evento';
             eventIdInput.value = event.id;
             eventTitleInput.value = event.title;
+            eventTimeInput.value = event.time;
             eventDescInput.value = event.description;
             deleteEventBtn.style.display = 'inline-block';
         } else {
@@ -114,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle.textContent = 'Adicionar Evento';
         eventIdInput.value = '';
         eventTitleInput.value = '';
+        eventTimeInput.value = '';
         eventDescInput.value = '';
         deleteEventBtn.style.display = 'none';
     }
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ordenar eventos por data
             events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
 
-            const tableColumn = ["Data", "Título", "Descrição"];
+            const tableColumn = ["Data", "Título", "Horario", "Descrição"];
             const tableRows = [];
 
             events.forEach(event => {
