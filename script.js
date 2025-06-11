@@ -241,25 +241,23 @@ if (events.length > 0) {
             // Ordenar eventos por data
             events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
 
-            const tableColumn = ["Data", "Horário", "Título", "Descrição"];
-            const tableRows = [];
+           const tableBody = events.map(event => {
+    const datePart = event.id.split('-')[0]; // "2025-06-11"
+    const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
+    return [
+        formattedDate,
+        event.hour || "—",
+        event.title,
+        event.description || "Sem descrição"
+    ];
+});
 
-            events.forEach(event => {
-                const eventDate = new Date(event.id.split('-T')[0]).toLocaleDateString('pt-br');
-                const eventData = [
-                    eventDate,
-                    event.hour || "—",
-                    event.title,
-                    event.description || "Sem descrição"
-                ];
-                tableRows.push(eventData);
-            });
+doc.autoTable({
+    head: [["Data", "Horário", "Título", "Descrição"]],
+    body: tableBody,
+    startY: 30
+});
 
-            doc.autoTable({
-              head: [['Coluna 1', 'Coluna 2']],
-              body: [['Linha 1', 'Valor 1'], ['Linha 2', 'Valor 2']],
-              startY: 30
-            });
 
 
     // EVENT LISTENERS
