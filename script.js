@@ -91,18 +91,39 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const events = await getEventsForDate(date);
 
-        if (events.length > 0) {
-            // Se existem eventos, exibe o primeiro para edição
-            const event = events[0]; // Simplificação: editando o primeiro evento do dia
-            modalTitle.textContent = 'Editar Evento';
+modalTitle.textContent = 'Adicionar Evento';
+
+const existingList = document.getElementById('event-list');
+if (existingList) existingList.remove();
+
+if (events.length > 0) {
+    const list = document.createElement('ul');
+    list.id = 'event-list';
+    list.style.marginTop = '15px';
+
+    events.forEach(event => {
+        const item = document.createElement('li');
+        item.textContent = `${event.hour || '—'} - ${event.title}`;
+        item.style.cursor = 'pointer';
+        item.style.marginBottom = '5px';
+        item.style.borderBottom = '1px solid #ccc';
+        item.style.padding = '5px 0';
+
+        item.addEventListener('click', () => {
             eventIdInput.value = event.id;
             eventTitleInput.value = event.title;
             eventDescInput.value = event.description;
             document.getElementById('event-hour-input').value = event.hour || '';
+            modalTitle.textContent = 'Editar Evento';
             deleteEventBtn.style.display = 'inline-block';
-        } else {
-            modalTitle.textContent = 'Adicionar Evento';
-        }
+        });
+
+        list.appendChild(item);
+    });
+
+    document.querySelector('.modal-content').appendChild(list);
+}
+
 
         eventModal.style.display = 'flex';
     }
