@@ -1,0 +1,261 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // ELEMENTOS DO DOM
+    const monthYearStr = document.getElementById('month-year-str');
+    const calendarDays = document.getElementById('calendar-days');
+    const prevMonthBtn = document.getElementById('prev-month-btn');
+    const nextMonthBtn = document.getElementById('next-month-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+
+    // ELEMENTOS DO MODAL
+    const eventModal = document.getElementById('event-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const eventIdInput = document.getElementById('event-id');
+    const eventTitleInput = document.getElementById('event-title-input');
+    const eventDescInput = document.getElementById('event-desc-input');
+    const saveEventBtn = document.getElementById('save-event-btn');
+    const deleteEventBtn = document.getElementById('delete-event-btn');
+    const closeBtn = document.querySelector('.close-btn');
+
+    // ESTADO DO CALENDÁRIO
+    let currentDate = new Date();
+    let db;
+    let selectedDate;
+
+    // INICIALIZAÇÃO DO INDEXEDDB
+    function initDB() {
+        const request = indexedDB.open('agendaDB', 1);
+
+        request.onerror = (event) => console.error("Erro no IndexedDB:", event.target.errorCode);
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            renderCalendar();
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            db.createObjectStore('events', { keyPath: 'id' });
+        };
+    }
+
+    // RENDERIZAÇÃO DO CALENDÁRIO
+    async function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        monthYearStr.textContent = `${new Date(year, month).toLocaleString('pt-br', { month: 'long' })} ${year}`;
+        calendarDays.innerHTML = '';
+
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const events = await getEventsForMonth(year, month);
+
+        // Preenche dias vazios no início do mês
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.classList.add('day', 'empty');
+            calendarDays.appendChild(emptyDay);
+        }
+
+        // Preenche os dias do mês
+        for (let day = 1; day <= daysInMonth; day++) {
+            const daySquare = document.createElement('div');
+            daySquare.classList.add('day');
+            daySquare.textContent = day;
+            daySquare.dataset.date = new Date(year, month, day).toISOString().split('T')[0];
+
+            // Marca o dia de hoje
+            const today = new Date();
+            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                daySquare.classList.add('today');
+            }
+            
+            // Adiciona indicador de evento
+            const dateStr = daySquare.dataset.date;
+            if (events.some(e => e.id.startsWith(dateStr))) {
+                const eventIndicator = document.createElement('div');
+                eventIndicator.classList.add('event-indicator');
+                daySquare.appendChild(eventIndicator);
+            }
+
+            daySquare.addEventListener('click', () => openModal(daySquare.dataset.date));
+            calendarDays.appendChild(daySquare);
+        }
+    }
+
+    // LÓGICA DO MODAL
+    async function openModal(date) {
+        selectedDate = date;
+        resetModal();
+        
+        const events = await getEventsForDate(date);
+
+        if (events.length > 0) {
+            // Se existem eventos, exibe o primeiro para edição
+            const event = events[0]; // Simplificação: editando o primeiro evento do dia
+            modalTitle.textContent = 'Editar Evento';
+            eventIdInput.value = event.id;
+            eventTitleInput.value = event.title;
+            eventDescInput.value = event.description;
+            deleteEventBtn.style.display = 'inline-block';
+        } else {
+            modalTitle.textContent = 'Adicionar Evento';
+        }
+
+        eventModal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        eventModal.style.display = 'none';
+    }
+    
+    function resetModal() {
+        modalTitle.textContent = 'Adicionar Evento';
+        eventIdInput.value = '';
+        eventTitleInput.value = '';
+        eventDescInput.value = '';
+        deleteEventBtn.style.display = 'none';
+    }
+    
+    // OPERAÇÕES CRUD COM INDEXEDDB
+    function saveEvent() {
+        const title = eventTitleInput.value.trim();
+        if (!title) {
+            alert('O título do evento é obrigatório!');
+            return;
+        }
+
+        const description = eventDescInput.value.trim();
+        const eventId = eventIdInput.value || `${selectedDate}-${Date.now()}`;
+        
+        const eventData = {
+            id: eventId,
+            title,
+            description
+        };
+
+        const transaction = db.transaction(['events'], 'readwrite');
+        const store = transaction.objectStore('events');
+        store.put(eventData);
+
+        transaction.oncomplete = () => {
+            closeModal();
+            renderCalendar();
+        };
+
+        transaction.onerror = (event) => console.error("Erro ao salvar evento:", event.target.errorCode);
+    }
+
+    function deleteEvent() {
+        const eventId = eventIdInput.value;
+        if (!eventId) return;
+
+        const transaction = db.transaction(['events'], 'readwrite');
+        const store = transaction.objectStore('events');
+        store.delete(eventId);
+
+        transaction.oncomplete = () => {
+            closeModal();
+            renderCalendar();
+        };
+        
+        transaction.onerror = (event) => console.error("Erro ao deletar evento:", event.target.errorCode);
+    }
+    
+    async function getEventsForMonth(year, month) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['events'], 'readonly');
+            const store = transaction.objectStore('events');
+            const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const allEvents = request.result;
+                const monthEvents = allEvents.filter(e => e.id.startsWith(monthStr));
+                resolve(monthEvents);
+            };
+
+            request.onerror = (event) => reject("Erro ao buscar eventos:", event.target.errorCode);
+        });
+    }
+
+    async function getEventsForDate(dateStr) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['events'], 'readonly');
+            const store = transaction.objectStore('events');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const allEvents = request.result;
+                const dateEvents = allEvents.filter(e => e.id.startsWith(dateStr));
+                resolve(dateEvents);
+            };
+
+            request.onerror = (event) => reject("Erro ao buscar eventos:", event.target.errorCode);
+        });
+    }
+    
+    // EXPORTAR PARA PDF
+    async function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthName = new Date(year, month).toLocaleString('pt-br', { month: 'long' });
+
+        doc.setFontSize(20);
+        doc.text(`Relatório de Eventos - ${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`, 14, 22);
+        
+        const events = await getEventsForMonth(year, month);
+        
+        if (events.length === 0) {
+            doc.setFontSize(12);
+            doc.text("Nenhum evento agendado para este mês.", 14, 35);
+        } else {
+            // Ordenar eventos por data
+            events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
+
+            const tableColumn = ["Data", "Título", "Descrição"];
+            const tableRows = [];
+
+            events.forEach(event => {
+                const eventDate = new Date(event.id.split('-T')[0]).toLocaleDateString('pt-br');
+                const eventData = [
+                    eventDate,
+                    event.title,
+                    event.description || "Sem descrição"
+                ];
+                tableRows.push(eventData);
+            });
+
+            doc.autoTable(tableColumn, tableRows, { startY: 30 });
+        }
+        
+        doc.save(`Relatorio_${monthName}_${year}.pdf`);
+    }
+
+    // EVENT LISTENERS
+    prevMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (event) => {
+        if (event.target == eventModal) closeModal();
+    });
+    
+    saveEventBtn.addEventListener('click', saveEvent);
+    deleteEventBtn.addEventListener('click', deleteEvent);
+    exportPdfBtn.addEventListener('click', exportToPDF);
+    
+    // INICIALIZAÇÃO
+    initDB();
+});
