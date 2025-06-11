@@ -255,11 +255,12 @@ if (events.length > 0) {
                 tableRows.push(eventData);
             });
 
-            doc.autoTable(tableColumn, tableRows, { startY: 30 });
-        }
-        
-        doc.save(`Relatorio_${monthName}_${year}.pdf`);
-    }
+            doc.autoTable({
+              head: [['Coluna 1', 'Coluna 2']],
+              body: [['Linha 1', 'Valor 1'], ['Linha 2', 'Valor 2']],
+              startY: 30
+            });
+
 
     // EVENT LISTENERS
     prevMonthBtn.addEventListener('click', () => {
