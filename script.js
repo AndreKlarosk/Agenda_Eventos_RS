@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventIdInput.value = event.id;
             eventTitleInput.value = event.title;
             eventDescInput.value = event.description;
-            document.getElementById('event-date-input').value = event.hour || '';
+            document.getElementById('event-hour-input').value = event.hour || '';
             deleteEventBtn.style.display = 'inline-block';
         } else {
             modalTitle.textContent = 'Adicionar Evento';
