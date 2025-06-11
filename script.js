@@ -234,8 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tableBody = events.map(event => {
                 const parts = event.id.split('-');
-                const datePart = `${parts[0]}-${parts[1]}-${parts[2]}`;
-                const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
+                // parts[0] é o ano, parts[1] é o mês (0-indexado), parts[2] é o dia
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1; // Mês é 0-indexado no objeto Date
+                const day = parseInt(parts[2]);
+
+                // Cria um objeto Date usando os componentes, interpretando-o no fuso horário local
+                const formattedDate = new Date(year, month, day).toLocaleDateString('pt-BR');
                 return [
                     formattedDate,
                     event.hour || "—",
