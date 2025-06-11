@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventIdInput.value = event.id;
             eventTitleInput.value = event.title;
             eventDescInput.value = event.description;
+            document.getElementById('event-date-input').value = event.hour || '';
             deleteEventBtn.style.display = 'inline-block';
         } else {
             modalTitle.textContent = 'Adicionar Evento';
@@ -128,11 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const description = eventDescInput.value.trim();
         const eventId = eventIdInput.value || `${selectedDate}-${Date.now()}`;
+        const hour = document.getElementById('event-date-input').value;
         
         const eventData = {
             id: eventId,
             title,
-            description
+            description,
+            hour
         };
 
         const transaction = db.transaction(['events'], 'readwrite');
@@ -217,13 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ordenar eventos por data
             events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
 
-            const tableColumn = ["Data", "Título", "Descrição"];
+            const tableColumn = ["Data", "Horário", "Título", "Descrição"];
             const tableRows = [];
 
             events.forEach(event => {
                 const eventDate = new Date(event.id.split('-T')[0]).toLocaleDateString('pt-br');
                 const eventData = [
                     eventDate,
+                    event.hour || "—",
                     event.title,
                     event.description || "Sem descrição"
                 ];
