@@ -248,25 +248,35 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.setFontSize(12);
             doc.text("Nenhum evento agendado para este mês.", 14, 35);
         } else {
-            events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
+            // Ordena os eventos pela data, como você já faz
+            events.sort((a, b) => {
+                const dateA = a.id.split('-').slice(0, 3).join('-'); // Pega YYYY-MM-DD
+                const dateB = b.id.split('-').slice(0, 3).join('-'); // Pega YYYY-MM-DD
+                return new Date(dateA) - new Date(dateB);
+            });
 
             const tableBody = events.map(event => {
-                const parts = event.id.split('-');
-                const datePart = `${parts[0]}-${parts[1]}-${parts[2]}`;
-                const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
+                // A data já está armazenada no formato YYYY-MM-DD no início do ID
+                // Basta extrair essa parte do ID para usar diretamente
+                const datePart = event.id.split('-').slice(0, 3).join('-'); // Pega "YYYY-MM-DD"
+                
+                // Converte para o formato dd/mm/yyyy para exibição
+                const [y, m, d] = datePart.split('-');
+                const formattedDate = `${d}/${m}/${y}`; // Formato dd/mm/yyyy para o Brasil
+
                 const participants = event.participants && event.participants.length > 0 ? event.participants.join(', ') : "Nenhum";
                 return [
                     formattedDate,
                     event.hour || "—",
                     event.title,
                     event.description || "Sem descrição",
-                    participants // Adiciona os participantes à linha da tabela
+                    participants
                 ];
             });
 
 
             doc.autoTable({
-                head: [["Data", "Horário", "Título", "Descrição", "Participantes"]], // Adiciona "Participantes" ao cabeçalho
+                head: [["Data", "Horário", "Título", "Descrição", "Participantes"]],
                 body: tableBody,
                 startY: 30
             });
