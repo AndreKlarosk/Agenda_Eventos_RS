@@ -51,27 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const events = await getEventsForMonth(year, month);
 
-        // Preenche dias vazios no início do mês
         for (let i = 0; i < firstDayOfMonth; i++) {
             const emptyDay = document.createElement('div');
             emptyDay.classList.add('day', 'empty');
             calendarDays.appendChild(emptyDay);
         }
 
-        // Preenche os dias do mês
         for (let day = 1; day <= daysInMonth; day++) {
             const daySquare = document.createElement('div');
             daySquare.classList.add('day');
             daySquare.textContent = day;
             daySquare.dataset.date = new Date(year, month, day).toISOString().split('T')[0];
 
-            // Marca o dia de hoje
             const today = new Date();
             if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
                 daySquare.classList.add('today');
             }
-            
-            // Adiciona indicador de evento
+
             const dateStr = daySquare.dataset.date;
             if (events.some(e => e.id.startsWith(dateStr))) {
                 const eventIndicator = document.createElement('div');
@@ -84,46 +80,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // LÓGICA DO MODAL
     async function openModal(date) {
         selectedDate = date;
         resetModal();
-        
+
         const events = await getEventsForDate(date);
 
-modalTitle.textContent = 'Adicionar Evento';
+        modalTitle.textContent = 'Adicionar Evento';
 
-const existingList = document.getElementById('event-list');
-if (existingList) existingList.remove();
+        const existingList = document.getElementById('event-list');
+        if (existingList) existingList.remove();
 
-if (events.length > 0) {
-    const list = document.createElement('ul');
-    list.id = 'event-list';
-    list.style.marginTop = '15px';
+        if (events.length > 0) {
+            const list = document.createElement('ul');
+            list.id = 'event-list';
+            list.style.marginTop = '15px';
 
-    events.forEach(event => {
-        const item = document.createElement('li');
-        item.textContent = `${event.hour || '—'} - ${event.title}`;
-        item.style.cursor = 'pointer';
-        item.style.marginBottom = '5px';
-        item.style.borderBottom = '1px solid #ccc';
-        item.style.padding = '5px 0';
+            events.forEach(event => {
+                const item = document.createElement('li');
+                item.textContent = `${event.hour || '—'} - ${event.title}`;
+                item.style.cursor = 'pointer';
+                item.style.marginBottom = '5px';
+                item.style.borderBottom = '1px solid #ccc';
+                item.style.padding = '5px 0';
 
-        item.addEventListener('click', () => {
-            eventIdInput.value = event.id;
-            eventTitleInput.value = event.title;
-            eventDescInput.value = event.description;
-            document.getElementById('event-hour-input').value = event.hour || '';
-            modalTitle.textContent = 'Editar Evento';
-            deleteEventBtn.style.display = 'inline-block';
-        });
+                item.addEventListener('click', () => {
+                    eventIdInput.value = event.id;
+                    eventTitleInput.value = event.title;
+                    eventDescInput.value = event.description;
+                    document.getElementById('event-hour-input').value = event.hour || '';
+                    modalTitle.textContent = 'Editar Evento';
+                    deleteEventBtn.style.display = 'inline-block';
+                });
 
-        list.appendChild(item);
-    });
+                list.appendChild(item);
+            });
 
-    document.querySelector('.modal-content').appendChild(list);
-}
-
+            document.querySelector('.modal-content').appendChild(list);
+        }
 
         eventModal.style.display = 'flex';
     }
@@ -131,7 +125,7 @@ if (events.length > 0) {
     function closeModal() {
         eventModal.style.display = 'none';
     }
-    
+
     function resetModal() {
         modalTitle.textContent = 'Adicionar Evento';
         eventIdInput.value = '';
@@ -139,8 +133,7 @@ if (events.length > 0) {
         eventDescInput.value = '';
         deleteEventBtn.style.display = 'none';
     }
-    
-    // OPERAÇÕES CRUD COM INDEXEDDB
+
     function saveEvent() {
         const title = eventTitleInput.value.trim();
         if (!title) {
@@ -151,7 +144,7 @@ if (events.length > 0) {
         const description = eventDescInput.value.trim();
         const eventId = eventIdInput.value || `${selectedDate}-${Date.now()}`;
         const hour = document.getElementById('event-hour-input').value;
-        
+
         const eventData = {
             id: eventId,
             title,
@@ -183,10 +176,10 @@ if (events.length > 0) {
             closeModal();
             renderCalendar();
         };
-        
+
         transaction.onerror = (event) => console.error("Erro ao deletar evento:", event.target.errorCode);
     }
-    
+
     async function getEventsForMonth(year, month) {
         return new Promise((resolve, reject) => {
             const transaction = db.transaction(['events'], 'readonly');
@@ -219,46 +212,46 @@ if (events.length > 0) {
             request.onerror = (event) => reject("Erro ao buscar eventos:", event.target.errorCode);
         });
     }
-    
-    // EXPORTAR PARA PDF
+
     async function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
+
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         const monthName = new Date(year, month).toLocaleString('pt-br', { month: 'long' });
 
         doc.setFontSize(20);
         doc.text(`Relatório de Eventos - ${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`, 14, 22);
-        
+
         const events = await getEventsForMonth(year, month);
-        
+
         if (events.length === 0) {
             doc.setFontSize(12);
             doc.text("Nenhum evento agendado para este mês.", 14, 35);
         } else {
-            // Ordenar eventos por data
             events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
 
-           const tableBody = events.map(event => {
-    const datePart = event.id.split('-')[0]; // "2025-06-11"
-    const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
-    return [
-        formattedDate,
-        event.hour || "—",
-        event.title,
-        event.description || "Sem descrição"
-    ];
-});
+            const tableBody = events.map(event => {
+                const datePart = event.id.split('-')[0];
+                const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
+                return [
+                    formattedDate,
+                    event.hour || "—",
+                    event.title,
+                    event.description || "Sem descrição"
+                ];
+            });
 
-doc.autoTable({
-    head: [["Data", "Horário", "Título", "Descrição"]],
-    body: tableBody,
-    startY: 30
-});
+            doc.autoTable({
+                head: [["Data", "Horário", "Título", "Descrição"]],
+                body: tableBody,
+                startY: 30
+            });
         }
 
+        doc.save(`Relatorio_${monthName}_${year}.pdf`);
+    }
 
     // EVENT LISTENERS
     prevMonthBtn.addEventListener('click', () => {
@@ -275,11 +268,11 @@ doc.autoTable({
     window.addEventListener('click', (event) => {
         if (event.target == eventModal) closeModal();
     });
-    
+
     saveEventBtn.addEventListener('click', saveEvent);
     deleteEventBtn.addEventListener('click', deleteEvent);
     exportPdfBtn.addEventListener('click', exportToPDF);
-    
+
     // INICIALIZAÇÃO
     initDB();
-}});
+});
