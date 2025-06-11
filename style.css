@@ -14,8 +14,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
+    min-height: 100vh;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 #calendar-container {
@@ -195,4 +196,37 @@ body {
 
 #save-event-btn:hover, #delete-event-btn:hover {
     opacity: 0.8;
+}
+@media (max-width: 600px) {
+    #calendar-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #calendar-header h2 {
+        font-size: 1.4em;
+        text-align: center;
+    }
+
+    #calendar-header button {
+        width: 100%;
+    }
+
+    #weekdays-container {
+        font-size: 0.8em;
+    }
+
+    .day {
+        padding: 10px;
+        min-height: 60px;
+    }
+
+    #export-pdf-btn {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
 }
