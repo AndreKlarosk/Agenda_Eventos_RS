@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteEventBtn = document.getElementById('delete-event-btn');
     const closeBtn = document.querySelector('.close-btn');
 
+    // NOVOS ELEMENTOS DO MODAL PARA PARTICIPANTES
+    const participantCheckboxes = document.querySelectorAll('input[name="event-participant"]'); // Seleciona todos os checkboxes de participantes
+
     // ESTADO DO CALENDÁRIO
     let currentDate = new Date();
     let db;
@@ -109,6 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     eventTitleInput.value = event.title;
                     eventDescInput.value = event.description;
                     document.getElementById('event-hour-input').value = event.hour || '';
+                    // Marcar os checkboxes de participantes
+                    participantCheckboxes.forEach(checkbox => {
+                        checkbox.checked = event.participants && event.participants.includes(checkbox.value);
+                    });
                     modalTitle.textContent = 'Editar Evento';
                     deleteEventBtn.style.display = 'inline-block';
                 });
@@ -131,6 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
         eventIdInput.value = '';
         eventTitleInput.value = '';
         eventDescInput.value = '';
+        document.getElementById('event-hour-input').value = '';
+        // Desmarcar todos os checkboxes de participantes
+        participantCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
         deleteEventBtn.style.display = 'none';
     }
 
@@ -145,11 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventId = eventIdInput.value || `${selectedDate}-${Date.now()}`;
         const hour = document.getElementById('event-hour-input').value;
 
+        // Coletar os participantes selecionados
+        const selectedParticipants = Array.from(participantCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
         const eventData = {
             id: eventId,
             title,
             description,
-            hour
+            hour,
+            participants: selectedParticipants // Adiciona os participantes ao objeto do evento
         };
 
         const transaction = db.transaction(['events'], 'readwrite');
@@ -234,24 +252,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tableBody = events.map(event => {
                 const parts = event.id.split('-');
-                // parts[0] é o ano, parts[1] é o mês (0-indexado), parts[2] é o dia
-                const year = parseInt(parts[0]);
-                const month = parseInt(parts[1]) - 1; // Mês é 0-indexado no objeto Date
-                const day = parseInt(parts[2]);
-
-                // Cria um objeto Date usando os componentes, interpretando-o no fuso horário local
-                const formattedDate = new Date(year, month, day).toLocaleDateString('pt-BR');
+                const datePart = `${parts[0]}-${parts[1]}-${parts[2]}`;
+                const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
+                const participants = event.participants && event.participants.length > 0 ? event.participants.join(', ') : "Nenhum";
                 return [
                     formattedDate,
                     event.hour || "—",
                     event.title,
-                    event.description || "Sem descrição"
+                    event.description || "Sem descrição",
+                    participants // Adiciona os participantes à linha da tabela
                 ];
             });
 
 
             doc.autoTable({
-                head: [["Data", "Horário", "Título", "Descrição"]],
+                head: [["Data", "Horário", "Título", "Descrição", "Participantes"]], // Adiciona "Participantes" ao cabeçalho
                 body: tableBody,
                 startY: 30
             });
