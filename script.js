@@ -282,4 +282,4 @@ doc.autoTable({
     
     // INICIALIZAÇÃO
     initDB();
-});
+}});
