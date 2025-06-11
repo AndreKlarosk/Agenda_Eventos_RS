@@ -257,7 +257,7 @@ doc.autoTable({
     body: tableBody,
     startY: 30
 });
-
+        }
 
 
     // EVENT LISTENERS
