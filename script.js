@@ -233,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
             events.sort((a, b) => new Date(a.id.split('-')[0]) - new Date(b.id.split('-')[0]));
 
             const tableBody = events.map(event => {
-                const datePart = event.id.split('-')[0];
+                const parts = event.id.split('-');
+                const datePart = `${parts[0]}-${parts[1]}-${parts[2]}`;
                 const formattedDate = new Date(datePart).toLocaleDateString('pt-BR');
                 return [
                     formattedDate,
@@ -242,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     event.description || "Sem descrição"
                 ];
             });
+
 
             doc.autoTable({
                 head: [["Data", "Horário", "Título", "Descrição"]],
