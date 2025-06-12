@@ -109,21 +109,21 @@ body {
 }
 
 #export-pdf-btn {
-    display: block;
-    width: 30%;
+    display: block; /* Garante que ocupe a largura total para margin auto funcionar */
+    width: 30%; /* Mantém a largura de 30% como você tinha */
+    max-width: 250px; /* Adiciona um max-width para não ficar muito grande em telas largas */
     padding: 12px;
-    margin-top: 10px;
-    background-color: #27ae60;
+    margin: 10px auto 0 auto; /* Centraliza horizontalmente: top 10px, auto para laterais, bottom 0, auto para laterais */
+    background: linear-gradient(45deg, #27ae60, #2ecc71); /* Degradê: do verde escuro para um verde mais claro */
     color: var(--light-text);
     border: none;
-    border-radius: center;
+    border-radius: 5px; /* Ajuste o border-radius para um valor fixo, 'center' não é válido */
     cursor: pointer;
     font-size: 1em;
-    transition: background-color 0.3s;
-}
-
+    transition: background 0.3s ease; /* Transição para o hover */
 #export-pdf-btn:hover {
-    background-color: #229954;
+    background: linear-gradient(45deg, #229a53, #27ae60); /* Degradê mais escuro no hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona uma pequena sombra no hover */
 }
 
 /* Estilos do Modal */
