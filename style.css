@@ -109,9 +109,9 @@ body {
 }
 
 #export-pdf-btn {
-    display: block;
+    display: center;
     width: 30%;
-    padding: center;
+    padding: 12px;
     margin-top: 10px;
     background-color: #27ae60;
     color: var(--light-text);
