@@ -44,14 +44,26 @@ body {
     background-color: var(--secondary-color);
     color: var(--light-text);
     border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
+    width: 40px; /* Largura fixa para torná-lo circular */
+    height: 40px; /* Altura fixa para torná-lo circular */
+    border-radius: 50%; /* Torna o botão circular */
     cursor: pointer;
-    transition: background-color 0.3s;
+    display: flex; /* Para centralizar o conteúdo (a seta) */
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    font-size: 1.2em; /* Tamanho da seta */
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
 }
-
 #calendar-header button:hover {
     background-color: #2980b9;
+    transform: translateY(-2px); /* Efeito de "elevação" no hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada no hover */
+}
+#calendar-header button span {
+    display: block; /* Garante que o span ocupa o espaço para centralização */
+    line-height: 1; /* Para alinhar bem o texto/ícone */
 }
 
 #weekdays-container {
